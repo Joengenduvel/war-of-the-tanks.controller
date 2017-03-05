@@ -51,11 +51,21 @@ void loop() {
     return;
   } else {
     sendWebPage(client);
+    client.flush();
+    client.stop();
   }
 }
 
 void sendWebPage(WiFiClient client){
-  client.print("<html><p>Hello World!</p></html>");
+  USE_SERIAL.print("sending page to: ");
+  USE_SERIAL.println(client.localIP());
+
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: text/html");
+  client.println(""); // do not forget this one
+  client.print("<!DOCTYPE html><html><script type=\"text/javascript\">document.addEventListener('touchstart', process_touchstart, false);var ws=new WebSocket(\"ws://");
+  client.print(WiFi.localIP());
+  client.println(":81\");function process_touchstart(ev){switch (ev.touches.length){case 1: enable_movement(ev); break; case 2: handle_two_touches(ev); break; case 3: handle_three_touches(ev); break; default: gesture_not_supported(ev); break;}}function enable_movement(ev){document.addEventListener('touchmove', send_positions, false);document.addEventListener('touchend', ws.send(\"STOP\"), false);}function send_positions(ev){var resultPane=document.getElementById(\"result\"); var touchobj=ev.changedTouches[0];var halfWidth=window.innerWidth/2;var halfHeight=window.innerHeight/2;var travelX=parseInt(((touchobj.clientX - halfWidth)/halfWidth)*100);var travelY=parseInt(((halfHeight - touchobj.clientY)/halfHeight)*100);resultPane.textContent=travelX +' - ' + travelY;ws.send(travelX + '/' + travelY);}</script><body><div style=\"position:absolute;top:50%; left:50%;transform: translateY(-50%);transform: translateX(-50%);\"><p>Touch Me!</p><p id=\"result\"></p></div></body></html>");
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
